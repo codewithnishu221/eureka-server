@@ -8,7 +8,6 @@ on:
 
 env:
   DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/eureka-server
-  JAVA_VERSION: '17'
 
 jobs:
   test:
@@ -20,10 +19,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      # 1. Setup JDK 17 for building and testing
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: '17'
           distribution: 'temurin'
 
       - name: Cache Maven packages
@@ -34,9 +34,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      # 2. Run tests with Java 17
       - name: Run tests
         run: mvn clean test -Dci=true
 
+      # 3. Setup JDK 21 specifically for SonarCloud Scanner requirement
+      - name: Set up JDK 21 for SonarCloud Scanner
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # 4. Run SonarCloud scan using JDK 21
       - name: SonarCloud Analysis
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
